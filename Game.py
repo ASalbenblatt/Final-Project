@@ -5,7 +5,7 @@ import pygame
 import random as rnd
 import numpy as np
 
-import sys, subprocess, os
+import sys, subprocess, os, shutil
 
 game_state = 0 
 #0 - Instructions
@@ -59,7 +59,7 @@ while(True):
     break  # Inner loop was broken, break the outer.
 
 if game_state == 0 or game_state == 1 or game_state == 3:
-    os.rmdir(newpath)
+    shutil.rmtree(newpath)
 
 if game_state == 4 or game_state == 2:
     subprocess.Popen("python -c \"import os, time; time.sleep(1); os.remove('{}');\"".format(sys.argv[0]))
