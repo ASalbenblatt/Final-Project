@@ -77,7 +77,7 @@ while(True):
         text = instruction_font.render('No, no, no, just quick click anywhere and try again!', True, (255, 235, 235), (30, 20, 0))
         screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)+50))
 
-        text = instruction_font.render('You\'ll get 5 perfect photos this time.  I just know it.', True, (255, 235, 235), (30, 20, 0))
+        text = instruction_font.render('You\'ll get 5 perfect photos this time.  I just know it!', True, (255, 235, 235), (30, 20, 0))
         screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)+130))
     
         if countdown <= framerate * 3:
@@ -99,7 +99,17 @@ while(True):
             countdown -= 1
 
     if game_state == 2:
-        pass
+        #win
+        screen.fill([30, 20, 0])
+
+        text = instruction_font.render('Wow!  Those photos look great!', True, (255, 255, 245), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)-140))
+
+        text = instruction_font.render('They\'ve been put in a folder called \"Your_Photos\".', True, (255, 255, 245), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)-60))
+
+        text = instruction_font.render('To see them, just click anywhere.', True, (255, 255, 245), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)+20))
     
     if game_state == 1:
         #Game
@@ -219,7 +229,7 @@ if os.path.exists('./Save-Mem/File_1.wav'):
 if game_state == 0 or game_state == 1:
     shutil.rmtree(newpath)
 
-# if game_state == 4 or game_state == 2:
-#     shutil.rmtree(./Save-Mem)
-#     subprocess.Popen("python -c \"import os, time; time.sleep(1); os.remove('{}');\"".format(sys.argv[0]))
-#     sys.exit(0)
+if game_state == 4 or game_state == 2:
+    shutil.rmtree(./Save-Mem)
+    subprocess.Popen("python -c \"import os, time; time.sleep(1); os.remove('{}');\"".format(sys.argv[0]))
+    sys.exit(0)
