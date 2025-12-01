@@ -48,15 +48,6 @@ while(True):
     events = pygame.event.get()
 
     
-    if game_state == 4:
-        pass
-    
-    if game_state == 3:
-        pass
-    
-    if game_state == 2:
-        pass
-    
     W_H_ratio_img = pygame.Surface.get_width(image) / pygame.Surface.get_height(image)
     W_H_ratio_screen = pygame.Surface.get_width(screen) / pygame.Surface.get_height(screen)
     if W_H_ratio_img > W_H_ratio_screen:
@@ -66,6 +57,50 @@ while(True):
         scale_factor = pygame.Surface.get_width(screen) / pygame.Surface.get_width(image)
         img_scaled = pygame.transform.scale_by(image, scale_factor)
 
+    if game_state == 4:
+        screen.blit(img_scaled, (0,0))
+
+        text = instruction_font.render('Click anywhere to quit.', True, (255, 255, 245), (30, 20, 0))
+        pygame.draw.rect(screen, (30, 20, 0), pygame.Rect(0, 0, 400, 70), border_bottom_right_radius=10)
+        screen.blit(text, (15, 5))
+    
+    if game_state == 3:
+        #lose
+        screen.fill([30, 20, 0])
+
+        text = instruction_font.render('You know what, it\'s ok you didn\'t take enough photos.', True, (235, 235, 255), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)-170))
+
+        text = instruction_font.render('It\'s probably better to just sit back and enjoy the view.', True, (235, 235, 255), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)-90))
+
+        text = instruction_font.render('No, no, no, just quick click anywhere and try again!', True, (255, 235, 235), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)+50))
+
+        text = instruction_font.render('You\'ll get 5 perfect photos this time.  I just know it.', True, (255, 235, 235), (30, 20, 0))
+        screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)+130))
+    
+        if countdown <= framerate * 3:
+            bar_color = (255, 46, 31)
+        elif countdown <= framerate * 9:
+            bar_color = (255, 159, 5)
+        else:
+            bar_color = (35, 212, 4)
+        pygame.draw.rect(screen, bar_color, pygame.Rect(0, 0, pygame.Surface.get_width(screen) * (countdown/(framerate * 15)), 20))
+
+        if countdown <= 0:
+            game_state = 4
+            pygame.mixer.init()
+            os.rename('./Save-Mem/File_1.txt', './Save-Mem/File_1.wav')
+            pygame.mixer.music.load('./Save-Mem/File_1.wav')
+            pygame.mixer.music.play(loops = -1)
+
+        else:
+            countdown -= 1
+
+    if game_state == 2:
+        pass
+    
     if game_state == 1:
         #Game
         screen.fill((0,0,0))
@@ -91,14 +126,6 @@ while(True):
         photo_area = pygame.Rect(photo_center[0] - photo_width/2, photo_center[1] - photo_height/2, photo_width, photo_height)
         screen.blit(img_scaled, (photo_center[0] - photo_width/2, photo_center[1] - photo_height/2), photo_area)
 
-        if photos_taken >= 5 and flash == 0:
-            game_state = 2
-        elif countdown <= 0:
-            game_state = 3
-            shutil.rmtree(newpath)
-        else:
-            countdown -= 1
-
         if countdown <= framerate:
             bar_color = (255, 46, 31)
         elif countdown <= framerate * 3:
@@ -106,6 +133,15 @@ while(True):
         else:
             bar_color = (35, 212, 4)
         pygame.draw.rect(screen, bar_color, pygame.Rect(0, 0, pygame.Surface.get_width(screen) * (countdown/(framerate * 5)), 20))
+
+        if photos_taken >= 5 and flash == 0:
+            game_state = 2
+        elif countdown <= 0:
+            game_state = 3
+            shutil.rmtree(newpath)
+            countdown = framerate * 15
+        else:
+            countdown -= 1
     
     if game_state == 0:
         #Instructions
@@ -137,7 +173,14 @@ while(True):
 
         if game_state == 3:
             #3 - Lose
-            pass
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                game_state = 1
+                countdown = framerate * 5
+                if os.path.exists(newpath):
+                    shutil.rmtree(newpath)
+                os.mkdir(newpath)
+                photos_taken = 0
+
 
         if game_state == 2:
             #2 - Win
@@ -145,7 +188,7 @@ while(True):
 
         if game_state == 1:
             #1 - Game
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and countdown != framerate*5:
                 photos_taken += 1
                 flash = 7
                 photo = pygame.Surface((photo_width, photo_height))
@@ -158,7 +201,7 @@ while(True):
                 game_state = 1
     
         #X button
-        if event.type == pygame.QUIT or (event.type == pygame.MOUSEBUTTONDOWN and game_state == 2):
+        if event.type == pygame.QUIT or (event.type == pygame.MOUSEBUTTONDOWN and (game_state == 2 or game_state == 4)):
             pygame.display.quit()
             break
 
@@ -166,6 +209,12 @@ while(True):
         pygame.display.flip()  #updates the screen
         continue  # Continue if the inner loop wasn't broken.
     break  # Inner loop was broken, break the outer.
+
+if pygame.mixer.get_init():
+    pygame.mixer.stop()
+    pygame.mixer.quit()
+if os.path.exists('./Save-Mem/File_1.wav'):
+    os.rename('./Save-Mem/File_1.wav', './Save-Mem/File_1.txt')
 
 if game_state == 0 or game_state == 1:
     shutil.rmtree(newpath)
