@@ -23,7 +23,10 @@ screen = pygame.display.set_mode(screen_size, flags)
 
 timer = pygame.time.Clock()
 framerate = 60
-countdown = 100
+countdown = framerate * 5
+photos_taken = 0
+screen_fraction = 0.2
+flash = 0
 
 pygame.font.init()
 base_font = 'Quintessential-Regular.ttf'
@@ -33,6 +36,10 @@ newpath = './Your_Photos'
 if os.path.exists(newpath):
     shutil.rmtree(newpath)
 os.mkdir(newpath)
+
+os.rename('./Save-Mem/Save-Data.txt', './Save-Mem/Save-Data.png')
+image = pygame.image.load('./Save-Mem/Save-Data.png')
+os.rename('./Save-Mem/Save-Data.png', './Save-Mem/Save-Data.txt')
 
 while(True):
     timer.tick(framerate)        #Sets the framerate
@@ -50,9 +57,55 @@ while(True):
     if game_state == 2:
         pass
     
+    W_H_ratio_img = pygame.Surface.get_width(image) / pygame.Surface.get_height(image)
+    W_H_ratio_screen = pygame.Surface.get_width(screen) / pygame.Surface.get_height(screen)
+    if W_H_ratio_img > W_H_ratio_screen:
+        scale_factor = pygame.Surface.get_height(screen) / pygame.Surface.get_height(image)
+        img_scaled = pygame.transform.scale_by(image, scale_factor)
+    else:
+        scale_factor = pygame.Surface.get_width(screen) / pygame.Surface.get_width(image)
+        img_scaled = pygame.transform.scale_by(image, scale_factor)
+
     if game_state == 1:
         #Game
-        pass
+        screen.fill((0,0,0))
+        
+        photo_center = list(pygame.mouse.get_pos())
+        
+        photo_width = pygame.Surface.get_width(screen) * screen_fraction
+        photo_height = pygame.Surface.get_height(screen) * screen_fraction
+
+        if photo_center[0] < photo_width / 2:
+            photo_center[0] = photo_width / 2
+        if photo_center[0] > pygame.Surface.get_width(screen)  - photo_width / 2:
+            photo_center[0] = pygame.Surface.get_width(screen)  - photo_width / 2
+        if photo_center[1] < photo_height / 2:
+            photo_center[1] = photo_height / 2
+        if photo_center[1] > pygame.Surface.get_height(screen) - photo_height / 2:
+            photo_center[1] = pygame.Surface.get_height(screen) - photo_height / 2
+
+        if flash > 0:
+            img_scaled.fill((255, 255, 235))
+            flash -= 1
+
+        photo_area = pygame.Rect(photo_center[0] - photo_width/2, photo_center[1] - photo_height/2, photo_width, photo_height)
+        screen.blit(img_scaled, (photo_center[0] - photo_width/2, photo_center[1] - photo_height/2), photo_area)
+
+        if photos_taken >= 5 and flash == 0:
+            game_state = 2
+        elif countdown <= 0:
+            game_state = 3
+            shutil.rmtree(newpath)
+        else:
+            countdown -= 1
+
+        if countdown <= framerate:
+            bar_color = (255, 46, 31)
+        elif countdown <= framerate * 3:
+            bar_color = (255, 159, 5)
+        else:
+            bar_color = (35, 212, 4)
+        pygame.draw.rect(screen, bar_color, pygame.Rect(0, 0, pygame.Surface.get_width(screen) * (countdown/(framerate * 5)), 20))
     
     if game_state == 0:
         #Instructions
@@ -73,8 +126,6 @@ while(True):
         text = instruction_font.render('Click once to start', True, (255, 255, 245), (30, 20, 0))
         screen.blit(text, ((pygame.Surface.get_width(screen) - pygame.Surface.get_width(text))/2,(pygame.Surface.get_height(screen)/2)+150))
 
-    pygame.display.flip()  #updates the screen
-
     for event in events:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             #code go here
@@ -94,7 +145,12 @@ while(True):
 
         if game_state == 1:
             #1 - Game
-            pass
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                photos_taken += 1
+                flash = 7
+                photo = pygame.Surface((photo_width, photo_height))
+                photo.blit(img_scaled, (0,0), photo_area)
+                pygame.image.save(photo, './Your_Photos/Photo_'+str(photos_taken)+'.png')
 
         if game_state == 0:
             #0 - Instructions
@@ -102,17 +158,19 @@ while(True):
                 game_state = 1
     
         #X button
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or (event.type == pygame.MOUSEBUTTONDOWN and game_state == 2):
             pygame.display.quit()
             break
 
     else:
+        pygame.display.flip()  #updates the screen
         continue  # Continue if the inner loop wasn't broken.
     break  # Inner loop was broken, break the outer.
 
-if game_state == 0 or game_state == 1 or game_state == 3:
+if game_state == 0 or game_state == 1:
     shutil.rmtree(newpath)
 
 # if game_state == 4 or game_state == 2:
+#     shutil.rmtree(./Save-Mem)
 #     subprocess.Popen("python -c \"import os, time; time.sleep(1); os.remove('{}');\"".format(sys.argv[0]))
 #     sys.exit(0)
