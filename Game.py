@@ -230,6 +230,6 @@ if game_state == 0 or game_state == 1:
     shutil.rmtree(newpath)
 
 if game_state == 4 or game_state == 2:
-    shutil.rmtree(./Save-Mem)
+    shutil.rmtree('./Save-Mem')
     subprocess.Popen("python -c \"import os, time; time.sleep(1); os.remove('{}');\"".format(sys.argv[0]))
     sys.exit(0)
